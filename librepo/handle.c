@@ -832,7 +832,7 @@ lr_handle_prepare_mirrorlist(LrHandle *handle, gchar *localpath, GError **err)
         }
 
         url = lr_prepend_url_protocol(handle->mirrorlisturl);
-        if (!lr_yum_download_url(handle, url, fd, TRUE, err)) {
+        if (!lr_yum_download_url(handle, url, fd, TRUE, FALSE, err)) {
             close(fd);
             return FALSE;
         }
@@ -948,7 +948,7 @@ lr_handle_prepare_metalink(LrHandle *handle, gchar *localpath, GError **err)
         }
 
         url = lr_prepend_url_protocol(handle->metalinkurl);
-        if (!lr_yum_download_url(handle, url, fd, TRUE, err)) {
+        if (!lr_yum_download_url(handle, url, fd, TRUE, FALSE, err)) {
             close(fd);
             return FALSE;
         }

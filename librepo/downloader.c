@@ -1162,7 +1162,7 @@ set_max_speeds_to_transfers(LrDownload *dd, GError **err)
         const guint num_running_downloads_from_repo = GPOINTER_TO_UINT(value);
 
         // Calculate a max speed (rounded up) per target (for repo)
-        const gint64 single_target_speed = 
+        const gint64 single_target_speed =
             (repo->maxspeed + (num_running_downloads_from_repo - 1)) / num_running_downloads_from_repo;
 
         for (GSList *elem = dd->running_transfers; elem; elem = g_slist_next(elem)) {
@@ -1740,8 +1740,8 @@ transfer_error:
             if (!fatal_error &&
                 !complete_url_in_path &&
                 !target->target->baseurl)
-            {   
-              
+            {
+
                 // Temporary error (serious_error) during download occured and
                 // another transfers are running or there are successful transfers
                 // and fewer failed transfers than tried parallel connections. It may be mirror is OK
@@ -1775,7 +1775,7 @@ transfer_error:
                       return FALSE;
                 }
             }
-            
+
             if (!retry) {
                 // No more mirrors to try or baseurl used or fatal error
                 g_debug("%s: No more retries (tried: %d)",
@@ -2194,7 +2194,7 @@ lr_download_target(LrDownloadTarget *target,
 gboolean
 lr_download_url(LrHandle *lr_handle, const char *url, int fd, GError **err)
 {
-    return lr_yum_download_url(lr_handle, url, fd, FALSE, err);
+    return lr_yum_download_url(lr_handle, url, fd, FALSE, FALSE, err);
 }
 
 int

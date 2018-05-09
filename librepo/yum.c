@@ -466,7 +466,7 @@ lr_get_metadata_failure_callback(const LrHandle *handle)
 }
 
 gboolean
-lr_yum_download_url(LrHandle *lr_handle, const char *url, int fd, gboolean no_cache, GError **err)
+lr_yum_download_url(LrHandle *lr_handle, const char *url, int fd, gboolean no_cache, gboolean is_zchunk, GError **err)
 {
     gboolean ret;
     LrDownloadTarget *target;
@@ -485,7 +485,7 @@ lr_yum_download_url(LrHandle *lr_handle, const char *url, int fd, gboolean no_ca
     target = lr_downloadtarget_new(lr_handle,
                                    url, NULL, fd, NULL,
                                    NULL, 0, 0,(lr_handle->user_cb) ? progresscb : NULL, cbdata,
-                                   NULL, (lr_handle->hmfcb) ? hmfcb : NULL, NULL, 0, 0, no_cache);
+                                   NULL, (lr_handle->hmfcb) ? hmfcb : NULL, NULL, 0, 0, no_cache, is_zchunk);
 
     // Download the target
     ret = lr_download_target(target, &tmp_err);
@@ -543,7 +543,8 @@ lr_yum_download_repomd(LrHandle *handle,
                                                      NULL,
                                                      0,
                                                      0,
-                                                     TRUE);
+                                                     TRUE,
+                                                     FALSE);
 
     ret = lr_download_target(target, &tmp_err);
     assert((ret && !tmp_err) || (!ret && tmp_err));
@@ -574,6 +575,70 @@ lr_yum_download_repomd(LrHandle *handle,
     }
 
     return ret;
+}
+
+gboolean
+prepare_repo_download_std_target(LrHandle *handle,
+                                 LrYumRepoMdRecord *record,
+                                 char **path,
+                                 int *fd,
+                                 GSList **checksums,
+                                 GSList **targets,
+                                 GError **err)
+{
+    *path = lr_pathconcat(handle->destdir, record->location_href, NULL);
+    *fd = open(*path, O_CREAT|O_TRUNC|O_RDWR, 0666);
+    if (*fd < 0) {
+        g_debug("%s: Cannot create/open %s (%s)",
+                __func__, *path, g_strerror(errno));
+        g_set_error(err, LR_YUM_ERROR, LRE_IO,
+                    "Cannot create/open %s: %s", *path, g_strerror(errno));
+        lr_free(*path);
+        g_slist_free_full(*targets, (GDestroyNotify) lr_downloadtarget_free);
+        return FALSE;
+    }
+
+    if (handle->checks & LR_CHECK_CHECKSUM) {
+        // Select proper checksum type only if checksum check is enabled
+        LrDownloadTargetChecksum *checksum;
+        checksum = lr_downloadtargetchecksum_new(
+                       lr_checksum_type(record->checksum_type),
+                       record->checksum);
+        *checksums = g_slist_prepend(*checksums, checksum);
+    }
+    return TRUE;
+}
+
+gboolean
+prepare_repo_download_zck_target(LrHandle *handle,
+                                 LrYumRepoMdRecord *record,
+                                 char **path,
+                                 int *fd,
+                                 GSList **checksums,
+                                 GSList **targets,
+                                 GError **err)
+{
+    *path = lr_pathconcat(handle->destdir, record->zck_loc_href, NULL);
+    *fd = open(*path, O_CREAT|O_RDWR, 0666);
+    if (*fd < 0) {
+        g_debug("%s: Cannot create/open %s (%s)",
+                __func__, *path, g_strerror(errno));
+        g_set_error(err, LR_YUM_ERROR, LRE_IO,
+                    "Cannot create/open %s: %s", *path, g_strerror(errno));
+        lr_free(*path);
+        g_slist_free_full(*targets, (GDestroyNotify) lr_downloadtarget_free);
+        return FALSE;
+    }
+
+    if (handle->checks & LR_CHECK_CHECKSUM) {
+        // Select proper checksum type only if checksum check is enabled
+        LrDownloadTargetChecksum *checksum;
+        checksum = lr_downloadtargetchecksum_new(
+                       lr_checksum_type(record->checksum_header_type),
+                       record->checksum_header);
+        *checksums = g_slist_prepend(*checksums, checksum);
+    }
+    return TRUE;
 }
 
 gboolean
@@ -611,26 +676,22 @@ prepare_repo_download_targets(LrHandle *handle,
         if (!lr_yum_repomd_record_enabled(handle, record->type, repomd->records))
             continue;
 
-        path = lr_pathconcat(destdir, record->location_href, NULL);
-        fd = open(path, O_CREAT|O_TRUNC|O_RDWR, 0666);
-        if (fd < 0) {
-            g_debug("%s: Cannot create/open %s (%s)",
-                    __func__, path, g_strerror(errno));
-            g_set_error(err, LR_YUM_ERROR, LRE_IO,
-                        "Cannot create/open %s: %s", path, g_strerror(errno));
-            lr_free(path);
-            g_slist_free_full(*targets, (GDestroyNotify) lr_downloadtarget_free);
-            return FALSE;
+        char *location_href = record->location_href;
+        gboolean is_zchunk = FALSE;
+        if (record->zck_loc_href) {
+            location_href = record->zck_loc_href;
+            is_zchunk = TRUE;
         }
 
         GSList *checksums = NULL;
-        if (handle->checks & LR_CHECK_CHECKSUM) {
-            // Select proper checksum type only if checksum check is enabled
-            LrDownloadTargetChecksum *checksum;
-            checksum = lr_downloadtargetchecksum_new(
-                    lr_checksum_type(record->checksum_type),
-                    record->checksum);
-            checksums = g_slist_prepend(checksums, checksum);
+        if (is_zchunk) {
+            if(!prepare_repo_download_zck_target(handle, record, &path, &fd,
+                                                 &checksums, targets, err))
+                return FALSE;
+        } else {
+            if(!prepare_repo_download_std_target(handle, record, &path, &fd,
+                                                 &checksums, targets, err))
+                return FALSE;
         }
 
         if (handle->user_cb || handle->hmfcb) {
@@ -643,7 +704,7 @@ prepare_repo_download_targets(LrHandle *handle,
         }
 
         target = lr_downloadtarget_new(handle,
-                                       record->location_href,
+                                       location_href,
                                        record->location_base,
                                        fd,
                                        NULL,
@@ -657,7 +718,8 @@ prepare_repo_download_targets(LrHandle *handle,
                                        NULL,
                                        0,
                                        0,
-                                       FALSE);
+                                       FALSE,
+                                       is_zchunk);
 
         if (mdtarget != NULL)
             mdtarget->repomd_records_to_download++;

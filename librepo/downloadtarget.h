@@ -114,6 +114,9 @@ typedef struct {
         Add headers that tell proxy server to provide a fresh data
         instead of cached one. */
 
+    gboolean is_zchunk; /*!<
+        Whether record is a zchunk file or not */
+
     // Items filled by downloader
 
     char *usedmirror; /*!<
@@ -182,6 +185,8 @@ typedef struct {
  *                          it is ignored. 0 is default.
  * @param no_cache          Tell proxy server that we don't want to use cache
  *                          for this request and we want fresh data.
+ * @param is_zchunk         This target is a zchunk file, so be ready to use
+ *                          different download code paths
  * @return                  New allocated target
  */
 LrDownloadTarget *
@@ -200,7 +205,8 @@ lr_downloadtarget_new(LrHandle *handle,
                       void *userdata,
                       gint64 byterangestart,
                       gint64 byterangeend,
-                      gboolean no_cache);
+                      gboolean no_cache,
+                      gboolean is_zchunk);
 
 /** Reset download data filled during downloading. E.g. Error messages,
  * effective URL, used mirror etc.

@@ -394,6 +394,7 @@ lr_download_packages(GSList *targets,
                                                packagetarget,
                                                packagetarget->byterangestart,
                                                packagetarget->byterangeend,
+                                               FALSE,
                                                FALSE);
 
         downloadtargets = g_slist_append(downloadtargets, downloadtarget);
