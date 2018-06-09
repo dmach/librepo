@@ -421,7 +421,8 @@ lr_headercb(void *ptr, size_t size, size_t nmemb, void *userdata)
         if (lrtarget->protocol == LR_PROTOCOL_HTTP
             && g_str_has_prefix(header, "HTTP/")) {
             // Header of a HTTP protocol
-            if (g_strrstr(header, "200") && !(
+            if ((g_strrstr(header, "200") ||
+                 g_strrstr(header, "206")) && !(
                             g_strrstr(header, "connection established") ||
                             g_strrstr(header, "Connection established") ||
                             g_strrstr(header, "Connection Established")
