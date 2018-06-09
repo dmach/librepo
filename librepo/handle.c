@@ -109,6 +109,7 @@ lr_handle_init(void)
     handle->httpauthmethods = LRO_HTTPAUTHMETHODS_DEFAULT;
     handle->proxyauthmethods = LRO_PROXYAUTHMETHODS_DEFAULT;
     handle->ftpuseepsv = LRO_FTPUSEEPSV_DEFAULT;
+    handle->cachedir = NULL;
 
     return handle;
 }
@@ -146,6 +147,7 @@ lr_handle_free(LrHandle *handle)
     lr_handle_free_list(&handle->yumblist);
     lr_urlvars_free(handle->urlvars);
     lr_free(handle->gnupghomedir);
+    lr_free(handle->cachedir);
     lr_handle_free_list(&handle->httpheader);
     lr_free(handle);
 }
@@ -716,6 +718,11 @@ lr_handle_setopt(LrHandle *handle,
     case LRO_FTPUSEEPSV:
         handle->ftpuseepsv = va_arg(arg, long) ? 1 : 0;
         c_rc = curl_easy_setopt(c_h, CURLOPT_FTP_USE_EPSV, handle->ftpuseepsv);
+        break;
+
+    case LRO_CACHEDIR:
+        if (handle->cachedir) lr_free(handle->cachedir);
+        handle->cachedir = g_strdup(va_arg(arg, char *));
         break;
 
     default:
@@ -1499,6 +1506,11 @@ lr_handle_getinfo(LrHandle *handle,
     case LRI_FTPUSEEPSV:
         lnum = va_arg(arg, long *);
         *lnum = (long) handle->ftpuseepsv;
+        break;
+
+    case LRI_CACHEDIR:
+        str = va_arg(arg, char **);
+        *str = handle->cachedir;
         break;
 
     default:

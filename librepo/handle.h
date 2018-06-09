@@ -360,6 +360,10 @@ typedef enum {
         instead. After set the list to the handle, it has not to be freed!
         Handle itself takes care about freeing the list. */
 
+    LRO_CACHEDIR, /*!< (char *)
+        Path to base cache directory for repositories, used by zchunk to find
+        old files to copy data from */
+
     LRO_SENTINEL,    /*!< Sentinel */
 
 } LrHandleOption; /*!< Handle config options */
@@ -427,6 +431,7 @@ typedef enum {
     LRI_PROXYAUTHMETHODS,       /*!< (LrAuth) */
     LRI_FTPUSEEPSV,             /*!< (long) */
     LRI_YUMSLIST,               /*!< (LrUrlVars **) */
+    LRI_CACHEDIR,               /*!< (char *) */
     LRI_SENTINEL,
 } LrHandleInfoOption; /*!< Handle info options */
 
