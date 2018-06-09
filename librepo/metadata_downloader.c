@@ -298,6 +298,7 @@ create_repomd_xml_download_targets(GSList *targets,
                                                 target,
                                                 0,
                                                 0,
+                                                NULL,
                                                 TRUE,
                                                 FALSE);
 

@@ -485,7 +485,8 @@ lr_yum_download_url(LrHandle *lr_handle, const char *url, int fd, gboolean no_ca
     target = lr_downloadtarget_new(lr_handle,
                                    url, NULL, fd, NULL,
                                    NULL, 0, 0,(lr_handle->user_cb) ? progresscb : NULL, cbdata,
-                                   NULL, (lr_handle->hmfcb) ? hmfcb : NULL, NULL, 0, 0, no_cache, is_zchunk);
+                                   NULL, (lr_handle->hmfcb) ? hmfcb : NULL, NULL, 0, 0,
+                                   NULL, no_cache, is_zchunk);
 
     // Download the target
     ret = lr_download_target(target, &tmp_err);
@@ -543,6 +544,7 @@ lr_yum_download_repomd(LrHandle *handle,
                                                      NULL,
                                                      0,
                                                      0,
+                                                     NULL,
                                                      TRUE,
                                                      FALSE);
 
@@ -718,6 +720,7 @@ prepare_repo_download_targets(LrHandle *handle,
                                        NULL,
                                        0,
                                        0,
+                                       NULL,
                                        FALSE,
                                        is_zchunk);
 

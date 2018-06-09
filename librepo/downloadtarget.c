@@ -63,6 +63,7 @@ lr_downloadtarget_new(LrHandle *handle,
                       void *userdata,
                       gint64 byterangestart,
                       gint64 byterangeend,
+                      char *range,
                       gboolean no_cache,
                       gboolean is_zchunk)
 {
@@ -108,6 +109,7 @@ lr_downloadtarget_new(LrHandle *handle,
     target->userdata        = userdata;
     target->byterangestart  = byterangestart;
     target->byterangeend    = byterangeend;
+    target->range           = range;
     target->no_cache        = no_cache;
     target->is_zchunk       = is_zchunk;
 
