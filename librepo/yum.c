@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <zck.h>
 
 #include "util.h"
 #include "metalink.h"
@@ -466,7 +467,8 @@ lr_get_metadata_failure_callback(const LrHandle *handle)
 }
 
 gboolean
-lr_yum_download_url(LrHandle *lr_handle, const char *url, int fd, gboolean no_cache, gboolean is_zchunk, GError **err)
+lr_yum_download_url(LrHandle *lr_handle, const char *url, int fd,
+                    gboolean no_cache, gboolean is_zchunk, GError **err)
 {
     gboolean ret;
     LrDownloadTarget *target;
@@ -724,6 +726,11 @@ prepare_repo_download_targets(LrHandle *handle,
                                        FALSE,
                                        is_zchunk);
 
+        if(is_zchunk) {
+            target->expectedsize = record->size_header;
+            target->zck_header_size = record->size_header;
+        }
+
         if (mdtarget != NULL)
             mdtarget->repomd_records_to_download++;
         *targets = g_slist_append(*targets, target);
@@ -868,6 +875,7 @@ lr_yum_check_checksum_of_md_record(LrYumRepoMdRecord *rec,
     char *expected_checksum;
     LrChecksumType checksum_type;
     gboolean ret, matches;
+    gboolean is_zchunk = FALSE;
     GError *tmp_err = NULL;
 
     assert(!err || *err == NULL);
@@ -875,8 +883,14 @@ lr_yum_check_checksum_of_md_record(LrYumRepoMdRecord *rec,
     if (!rec || !path)
         return TRUE;
 
-    expected_checksum = rec->checksum;
-    checksum_type = lr_checksum_type(rec->checksum_type);
+    if(rec->zck_loc_href) {
+        expected_checksum = rec->checksum_header;
+        checksum_type = lr_checksum_type(rec->checksum_header_type);
+        is_zchunk = TRUE;
+    } else {
+        expected_checksum = rec->checksum;
+        checksum_type = lr_checksum_type(rec->checksum_type);
+    }
 
     g_debug("%s: Checking checksum of %s (expected: %s [%s])",
                        __func__, path, expected_checksum, rec->checksum_type);
@@ -888,10 +902,9 @@ lr_yum_check_checksum_of_md_record(LrYumRepoMdRecord *rec,
     }
 
     if (checksum_type == LR_CHECKSUM_UNKNOWN) {
-        g_debug("%s: Unknown checksum: %s", __func__, rec->checksum_type);
+        g_debug("%s: Unknown checksum", __func__);
         g_set_error(err, LR_YUM_ERROR, LRE_UNKNOWNCHECKSUM,
-                    "Unknown checksum type \"%s\" for %s",
-                    rec->checksum_type, path);
+                    "Unknown checksum type for %s", path);
         return FALSE;
     }
 
@@ -903,12 +916,30 @@ lr_yum_check_checksum_of_md_record(LrYumRepoMdRecord *rec,
         return FALSE;
     }
 
-    ret = lr_checksum_fd_cmp(checksum_type,
-                             fd,
-                             expected_checksum,
-                             1,
-                             &matches,
-                             &tmp_err);
+    if (is_zchunk) {
+        ret = FALSE;
+        matches = FALSE;
+        zckCtx *zck = lr_zck_init_read_base(expected_checksum, checksum_type,
+                                            rec->size_header, fd, &tmp_err);
+        if (!tmp_err) {
+            if(zck_validate_checksums(zck) < 1) {
+                g_set_error(&tmp_err, LR_YUM_ERROR, LRE_ZCK,
+                            "Unable to validate zchunk checksums");
+            } else {
+                ret = TRUE;
+                matches = TRUE;
+            }
+        }
+        if (zck)
+            zck_free(&zck);
+    } else {
+        ret = lr_checksum_fd_cmp(checksum_type,
+                                 fd,
+                                 expected_checksum,
+                                 1,
+                                 &matches,
+                                 &tmp_err);
+    }
 
     close(fd);
 
@@ -1104,7 +1135,11 @@ lr_yum_use_local(LrHandle *handle, LrResult *result, GError **err)
         if (lr_yum_repo_path(repo, record->type))
             continue; // This path already exists in repo
 
-        path = lr_pathconcat(baseurl, record->location_href, NULL);
+        if(record->zck_loc_href)
+            path = lr_pathconcat(baseurl, record->zck_loc_href, NULL);
+        else
+            path = lr_pathconcat(baseurl, record->location_href, NULL);
+
         if (access(path, F_OK) == -1) {
             // A repo file is missing
             if (!handle->ignoremissing) {
