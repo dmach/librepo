@@ -49,8 +49,8 @@ typedef struct {
     char *checksum_type;        /*!< Type of checksum */
     char *checksum_open;        /*!< Checksum of uncompressed file */
     char *checksum_open_type;   /*!< Type of checksum of uncompressed file */
-    char *checksum_header;      /*!< Checksum of zchunk header */
-    char *checksum_header_type; /*!< Type of checksum of zchunk header */
+    char *zck_header_checksum;  /*!< Checksum of zchunk header */
+    char *zck_header_checksum_type; /*!< Type of checksum of zchunk header */
     gint64 timestamp;           /*!< File timestamp */
     gint64 zck_timestamp;       /*!< Zchunk file timestamp */
     gint64 size;                /*!< File size */

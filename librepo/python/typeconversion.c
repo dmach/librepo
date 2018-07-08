@@ -162,10 +162,10 @@ PyObject_FromRepoMdRecord(LrYumRepoMdRecord *rec)
             PyStringOrNone_FromString(rec->checksum_open));
     PyDict_SetItemStringAndDecref(dict, "checksum_open_type",
             PyStringOrNone_FromString(rec->checksum_open_type));
-    PyDict_SetItemStringAndDecref(dict, "checksum_header",
-            PyStringOrNone_FromString(rec->checksum_header));
-    PyDict_SetItemStringAndDecref(dict, "checksum_header_type",
-            PyStringOrNone_FromString(rec->checksum_header_type));
+    PyDict_SetItemStringAndDecref(dict, "zck_header_checksum",
+            PyStringOrNone_FromString(rec->zck_header_checksum));
+    PyDict_SetItemStringAndDecref(dict, "zck_header_checksum_type",
+            PyStringOrNone_FromString(rec->zck_header_checksum_type));
     PyDict_SetItemStringAndDecref(dict, "timestamp",
             PyLong_FromLongLong((PY_LONG_LONG) rec->timestamp));
     PyDict_SetItemStringAndDecref(dict, "zck_timestamp",

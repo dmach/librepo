@@ -226,7 +226,7 @@ lr_zck_hash_from_lr_checksum(LrChecksumType checksum_type);
  *  header checksum
  * @param checksum            header checksum
  * @param checksum_type       header checksum type
- * @param header_size         header size
+ * @param zck_header_size     header size
  * @param fd                  file descriptor to read from
  * @return zck                zchunk context opened for reading
  *
@@ -235,12 +235,12 @@ lr_zck_hash_from_lr_checksum(LrChecksumType checksum_type);
  */
 zckCtx *
 lr_zck_init_read_base(const char *checksum, LrChecksumType checksum_type,
-                      gint64 header_size, int fd, GError **err);
+                      gint64 zck_header_size, int fd, GError **err);
 
 /** Base function for checking whether zchunk file has valid header checksum
  * @param checksum            header checksum
  * @param checksum_type       header checksum type
- * @param header_size         header size
+ * @param zck_header_size     header size
  * @param fd                  file descriptor to read from
  * @return zck                zchunk context opened for reading
  *
@@ -249,7 +249,7 @@ lr_zck_init_read_base(const char *checksum, LrChecksumType checksum_type,
  */
 gboolean
 lr_zck_valid_header_base(const char *checksum, LrChecksumType checksum_type,
-                         gint64 header_size, int fd, GError **err);
+                         gint64 zck_header_size, int fd, GError **err);
 
 /** Initialize zchunk file for reading while verifying header checksum
  * @param checksum            target containing checksum information

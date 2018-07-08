@@ -192,26 +192,26 @@ typedef enum {
 * has a "file" element listed first, because it is more frequent
 * than a "version" element). */
 static LrStatesSwitch stateswitches[] = {
-    { STATE_START,      "repomd",           STATE_REPOMD,         0 },
-    { STATE_REPOMD,     "revision",         STATE_REVISION,       1 },
-    { STATE_REPOMD,     "repoid",           STATE_REPOID,         1 },
-    { STATE_REPOMD,     "tags",             STATE_TAGS,           0 },
-    { STATE_REPOMD,     "data",             STATE_DATA,           0 },
-    { STATE_TAGS,       "repo",             STATE_REPO,           1 },
-    { STATE_TAGS,       "content",          STATE_CONTENT,        1 },
-    { STATE_TAGS,       "distro",           STATE_DISTRO,         1 },
-    { STATE_DATA,       "location",         STATE_LOCATION,       0 },
-    { STATE_DATA,       "zck-location",     STATE_ZCK_LOC,        0 },
-    { STATE_DATA,       "checksum",         STATE_CHECKSUM,       1 },
-    { STATE_DATA,       "open-checksum",    STATE_OPENCHECKSUM,   1 },
-    { STATE_DATA,       "header-checksum",  STATE_HEADERCHECKSUM, 1 },
-    { STATE_DATA,       "timestamp",        STATE_TIMESTAMP,      1 },
-    { STATE_DATA,       "zck-timestamp",    STATE_ZCK_TIMESTAMP,  1 },
-    { STATE_DATA,       "size",             STATE_SIZE,           1 },
-    { STATE_DATA,       "open-size",        STATE_OPENSIZE,       1 },
-    { STATE_DATA,       "header-size",      STATE_HEADERSIZE,     1 },
-    { STATE_DATA,       "database_version", STATE_DBVERSION,      1 },
-    { NUMSTATES,        NULL,               NUMSTATES,            0 }
+    { STATE_START,      "repomd",              STATE_REPOMD,         0 },
+    { STATE_REPOMD,     "revision",            STATE_REVISION,       1 },
+    { STATE_REPOMD,     "repoid",              STATE_REPOID,         1 },
+    { STATE_REPOMD,     "tags",                STATE_TAGS,           0 },
+    { STATE_REPOMD,     "data",                STATE_DATA,           0 },
+    { STATE_TAGS,       "repo",                STATE_REPO,           1 },
+    { STATE_TAGS,       "content",             STATE_CONTENT,        1 },
+    { STATE_TAGS,       "distro",              STATE_DISTRO,         1 },
+    { STATE_DATA,       "location",            STATE_LOCATION,       0 },
+    { STATE_DATA,       "zck-location",        STATE_ZCK_LOC,        0 },
+    { STATE_DATA,       "checksum",            STATE_CHECKSUM,       1 },
+    { STATE_DATA,       "open-checksum",       STATE_OPENCHECKSUM,   1 },
+    { STATE_DATA,       "zck-header-checksum", STATE_HEADERCHECKSUM, 1 },
+    { STATE_DATA,       "timestamp",           STATE_TIMESTAMP,      1 },
+    { STATE_DATA,       "zck-timestamp",       STATE_ZCK_TIMESTAMP,  1 },
+    { STATE_DATA,       "size",                STATE_SIZE,           1 },
+    { STATE_DATA,       "open-size",           STATE_OPENSIZE,       1 },
+    { STATE_DATA,       "zck-header-size",     STATE_HEADERSIZE,     1 },
+    { STATE_DATA,       "database_version",    STATE_DBVERSION,      1 },
+    { NUMSTATES,        NULL,                  NUMSTATES,            0 }
 };
 
 static void
@@ -384,9 +384,9 @@ lr_start_handler(void *pdata, const xmlChar *xmlElement, const xmlChar **xmlAttr
             break;
         }
 
-        pd->repomdrecord->checksum_header_type = g_string_chunk_insert(
-                                                    pd->repomdrecord->chunk,
-                                                    val);
+        pd->repomdrecord->zck_header_checksum_type = g_string_chunk_insert(
+                                                     pd->repomdrecord->chunk,
+                                                     val);
         break;
 
     case STATE_TIMESTAMP:
@@ -507,9 +507,9 @@ lr_end_handler(void *pdata, G_GNUC_UNUSED const xmlChar *element)
         assert(pd->repomd);
         assert(pd->repomdrecord);
 
-        pd->repomdrecord->checksum_header = lr_string_chunk_insert(
-                                            pd->repomdrecord->chunk,
-                                            pd->content);
+        pd->repomdrecord->zck_header_checksum = lr_string_chunk_insert(
+                                                pd->repomdrecord->chunk,
+                                                pd->content);
         break;
 
     case STATE_TIMESTAMP:

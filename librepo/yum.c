@@ -638,8 +638,8 @@ prepare_repo_download_zck_target(LrHandle *handle,
         // Select proper checksum type only if checksum check is enabled
         LrDownloadTargetChecksum *checksum;
         checksum = lr_downloadtargetchecksum_new(
-                       lr_checksum_type(record->checksum_header_type),
-                       record->checksum_header);
+                       lr_checksum_type(record->zck_header_checksum_type),
+                       record->zck_header_checksum);
         *checksums = g_slist_prepend(*checksums, checksum);
     }
     return TRUE;
@@ -884,8 +884,8 @@ lr_yum_check_checksum_of_md_record(LrYumRepoMdRecord *rec,
         return TRUE;
 
     if(rec->zck_loc_href) {
-        expected_checksum = rec->checksum_header;
-        checksum_type = lr_checksum_type(rec->checksum_header_type);
+        expected_checksum = rec->zck_header_checksum;
+        checksum_type = lr_checksum_type(rec->zck_header_checksum_type);
         is_zchunk = TRUE;
     } else {
         expected_checksum = rec->checksum;

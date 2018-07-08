@@ -501,7 +501,7 @@ lr_zck_hash_from_lr_checksum(LrChecksumType checksum_type)
 
 static zckCtx *
 init_zck_read(const char *checksum, LrChecksumType checksum_type,
-              gint64 header_size, int fd, GError **err)
+              gint64 zck_header_size, int fd, GError **err)
 {
     assert(!err || *err == NULL);
 
@@ -521,7 +521,7 @@ init_zck_read(const char *checksum, LrChecksumType checksum_type,
         free(zck);
         return NULL;
     }
-    if(!zck_set_ioption(zck, ZCK_VAL_HEADER_LENGTH, header_size)) {
+    if(!zck_set_ioption(zck, ZCK_VAL_HEADER_LENGTH, zck_header_size)) {
         g_set_error(err, LR_YUM_ERROR, LRE_ZCK,
                     "Error setting header size");
         free(zck);
@@ -540,12 +540,12 @@ init_zck_read(const char *checksum, LrChecksumType checksum_type,
 
 zckCtx *
 lr_zck_init_read_base(const char *checksum, LrChecksumType checksum_type,
-                      gint64 header_size, int fd, GError **err)
+                      gint64 zck_header_size, int fd, GError **err)
 {
     assert(!err || *err == NULL);
 
     lseek(fd, 0, SEEK_SET);
-    zckCtx *zck = init_zck_read(checksum, checksum_type, header_size, fd, err);
+    zckCtx *zck = init_zck_read(checksum, checksum_type, zck_header_size, fd, err);
     if(zck == NULL)
         return NULL;
 
@@ -566,12 +566,12 @@ lr_zck_init_read_base(const char *checksum, LrChecksumType checksum_type,
 
 gboolean
 lr_zck_valid_header_base(const char *checksum, LrChecksumType checksum_type,
-                         gint64 header_size, int fd, GError **err)
+                         gint64 zck_header_size, int fd, GError **err)
 {
     assert(!err || *err == NULL);
 
     lseek(fd, 0, SEEK_SET);
-    zckCtx *zck = init_zck_read(checksum, checksum_type, header_size, fd, err);
+    zckCtx *zck = init_zck_read(checksum, checksum_type, zck_header_size, fd, err);
     if(zck == NULL)
         return FALSE;
 
