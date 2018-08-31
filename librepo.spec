@@ -7,6 +7,13 @@
 %bcond_without python3
 %bcond_without tests
 %endif
+
+%if 0%{?rhel}
+%bcond_with zchunk
+%else
+%bcond_without zchunk
+%endif
+
 %global dnf_conflict 2.8.8
 
 Name:           librepo
@@ -28,6 +35,9 @@ BuildRequires:  libattr-devel
 BuildRequires:  libcurl-devel >= 7.19.0
 BuildRequires:  libxml2-devel
 BuildRequires:  openssl-devel
+%if %{with zchunk}
+BuildRequires:  zchunk-devel
+%endif
 
 %description
 A library providing C and Python (libcURL like) API to downloading repository
@@ -94,13 +104,13 @@ mkdir build build-py3
 
 %build
 pushd build
-  %cmake -DPYTHON_DESIRED:FILEPATH=%{__python2} ..
+  %cmake -DPYTHON_DESIRED:FILEPATH=%{__python2} %{!?with_zchunk:-DWITH_ZCHUNK=OFF} ..
   %make_build
 popd
 
 %if %{with python3}
 pushd build-py3
-  %cmake -DPYTHON_DESIRED:FILEPATH=%{__python3} ..
+  %cmake -DPYTHON_DESIRED:FILEPATH=%{__python3} %{!?with_zchunk:-DWITH_ZCHUNK=OFF} ..
   %make_build
 popd
 %endif
